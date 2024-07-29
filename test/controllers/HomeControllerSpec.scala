@@ -1,6 +1,7 @@
 package controllers
 
 import baseSpec.BaseSpec
+import controllers.HomeController
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.ControllerComponents
