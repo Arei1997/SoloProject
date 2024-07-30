@@ -7,6 +7,6 @@ GET     /assets/*file               controllers.Assets.versioned(path="/public",
 
 GET     /api           controllers.ApplicationController.index
 GET     /route         controllers.ApplicationController.create
-GET     /route/:id     controllers.ApplicationController.read(id: String)
+GET     /route/:id=read     controllers.ApplicationController.read(id: String)
 GET     /route/:id     controllers.ApplicationController.update(id: String)
 GET     /route/:id     controllers.ApplicationController.delete(id: String)
