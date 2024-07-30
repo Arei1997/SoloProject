@@ -1,6 +1,4 @@
-package repositories
-
-package repositories
+package repositories.repositories
 
 import models.DataModel
 import org.mongodb.scala.bson.conversions.Bson
@@ -26,9 +24,9 @@ class DataRepository @Inject()(
   replaceIndexes = false
 ) {
 
-  def index(): Future[Either[Int, Seq[DataModel]]]  =
-    collection.find().toFuture().map{
-      case books: Seq[DataModel] => Right(books)
+  def index(): Future[Either[Int, Seq[DataModel]]] =
+    collection.find().toFuture().map {
+      case books if books.nonEmpty => Right(books)
       case _ => Left(404)
     }
 
@@ -43,25 +41,24 @@ class DataRepository @Inject()(
       Filters.equal("_id", id)
     )
 
-  def read(id: String): Future[DataModel] =
-    collection.find(byID(id)).headOption flatMap {
-      case Some(data) =>
-        Future(data)
+  def read(id: String): Future[Either[Int, DataModel]] =
+    collection.find(byID(id)).headOption.map {
+      case Some(data) => Right(data)
+      case None => Left(404)
     }
 
   def update(id: String, book: DataModel): Future[result.UpdateResult] =
     collection.replaceOne(
       filter = byID(id),
       replacement = book,
-      options = new ReplaceOptions().upsert(true) //What happens when we set this to false?
+      options = new ReplaceOptions().upsert(true)
     ).toFuture()
 
-  def delete(id: String): Future[result.DeleteResult] =
-    collection.deleteOne(
-      filter = byID(id)
-    ).toFuture()
+  def delete(id: String): Future[Either[Int, Unit]] =
+    collection.deleteOne(byID(id)).toFuture().map { result =>
+      if (result.getDeletedCount > 0) Right(())
+      else Left(404)
+    }
 
-  def deleteAll(): Future[Unit] = collection.deleteMany(empty()).toFuture().map(_ => ()) //Hint: needed for tests
-
+  def deleteAll(): Future[Unit] = collection.deleteMany(empty()).toFuture().map(_ => ()) // Needed for tests
 }
-
