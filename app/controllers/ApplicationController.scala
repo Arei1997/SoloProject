@@ -14,7 +14,7 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
       case Right(item: Seq[DataModel]) => Ok {Json.toJson(item)}
-      case Left(error) => Status(error)(Json.toJson("Unable to find any books TEST TESTT"))
+      case Left(error) => Status(error)(Json.toJson("Unable to find any books"))
     }
   }
   def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
