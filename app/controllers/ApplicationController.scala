@@ -32,7 +32,18 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     }
   }
 
-  def update(id: String) = TODO
+  def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    request.body.validate[DataModel] match {
+      case JsSuccess(dataModel, _) =>
+        dataRepository.update(id, dataModel).flatMap { _ =>
+          dataRepository.read(id).map {
+            case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
+            case Left(error) => Status(error)(Json.toJson(s"cannot find item with id($id)"))
+          }
+        }
+      case JsError(_) => Future.successful(BadRequest)
+    }
+  }
 
   def delete(id: String): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.delete(id).map {
