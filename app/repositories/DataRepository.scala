@@ -51,7 +51,7 @@ class DataRepository @Inject()(
     collection.replaceOne(
       filter = byID(id),
       replacement = book,
-      options = new ReplaceOptions().upsert(true)
+      options = new ReplaceOptions().upsert(false)
     ).toFuture()
 
   def delete(id: String): Future[Either[Int, Unit]] =

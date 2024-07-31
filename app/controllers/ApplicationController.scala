@@ -39,6 +39,7 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
           dataRepository.read(id).map {
             case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
             case Left(error) => Status(error)(Json.toJson(s"cannot find item with id($id)"))
+
           }
         }
       case JsError(_) => Future.successful(BadRequest)
