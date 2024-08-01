@@ -35,16 +35,21 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel, _) =>
-        dataRepository.update(id, dataModel).flatMap { _ =>
-          dataRepository.read(id).map {
-            case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
-            case Left(error) => Status(error)(Json.toJson(s"cannot find item with id($id)"))
-
+        dataRepository.update(id, dataModel).flatMap { updateResult =>
+          if (updateResult.getMatchedCount > 0) {
+            dataRepository.read(id).map {
+              case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
+              case Left(_) => NotFound(Json.toJson(s"Cannot find item with id($id)"))
+            }
+          } else {
+            Future.successful(NotFound(Json.toJson(s"Cannot find item with id($id)")))
           }
         }
-      case JsError(_) => Future.successful(BadRequest)
+      case JsError(errors) =>
+        Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> JsError.toJson(errors))))
     }
   }
+
 
   def delete(id: String): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.delete(id).map {
