@@ -18,3 +18,6 @@ libraryDependencies ++= Seq(
   "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test,
   "org.scalatestplus.play" %% "scalatestplus-play"   % "5.1.0"          % Test
 )
+libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.8.8"
+
+libraryDependencies += ws
