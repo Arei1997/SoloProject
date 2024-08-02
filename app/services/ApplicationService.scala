@@ -1,7 +1,7 @@
 package services
 
 import connectors.LibraryConnector
-import connectors.models.Book
+import models.Book
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
