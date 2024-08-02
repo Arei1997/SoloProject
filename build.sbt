@@ -21,5 +21,5 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2" %Test
 )
 libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.8.8"
-
+libraryDependencies += ("org.typelevel"                %% "cats-core"                 % "2.3.0")
 libraryDependencies += ws

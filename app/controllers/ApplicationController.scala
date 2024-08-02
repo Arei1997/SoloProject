@@ -64,9 +64,6 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
     service.getGoogleBook(search = search, term = term).map { book =>
       Ok(Json.toJson(book))
-    }.recover {
-      case ex: Exception =>
-        InternalServerError(Json.obj("error" -> ex.getMessage))
     }
   }
 
