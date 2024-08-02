@@ -16,5 +16,10 @@ libraryDependencies ++= Seq(
   guice,
   "org.scalatest"          %% "scalatest"               % "3.2.15"             % Test,
   "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test,
-  "org.scalatestplus.play" %% "scalatestplus-play"   % "5.1.0"          % Test
+  "org.scalatestplus.play" %% "scalatestplus-play"   % "5.1.0"          % Test,
+  "com.typesafe.play" %% "play-ws" % "2.8.8" %Test,
+  "com.typesafe.play" %% "play-json" % "2.9.2" %Test
 )
+libraryDependencies += "com.typesafe.play" %% "play-ws" % "2.8.8"
+
+libraryDependencies += ws

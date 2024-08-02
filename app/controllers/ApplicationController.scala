@@ -5,12 +5,15 @@ import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import repositories.repositories.DataRepository
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
 
+import services.LibraryService
+
 import javax.inject.Inject
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents,val dataRepository: DataRepository,implicit val ec: ExecutionContext) extends BaseController{
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents,val dataRepository: DataRepository,implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController{
+
   def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
       case Right(item: Seq[DataModel]) => Ok {Json.toJson(item)}
@@ -57,4 +60,16 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
       case Left(error) => Status(error)(Json.toJson(s"Unable to delete item with id $id"))
     }
   }
+
+  def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
+    service.getGoogleBook(search = search, term = term).map { book =>
+      Ok(Json.toJson(book))
+    }.recover {
+      case ex: Exception =>
+        InternalServerError(Json.obj("error" -> ex.getMessage))
+    }
+  }
+
+
+
 }
