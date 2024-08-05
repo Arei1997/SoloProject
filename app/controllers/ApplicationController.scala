@@ -1,63 +1,61 @@
 package controllers
 
-import models.DataModel
+import models.{APIError, DataModel}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import repositories.repositories.DataRepository
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents}
-
 import services.LibraryService
 
-import javax.inject.Inject
-import javax.inject._
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents,val dataRepository: DataRepository,implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController{
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents,
+                                      val dataRepository: DataRepository,
+                                      implicit val ec: ExecutionContext,
+                                      val service: LibraryService) extends BaseController {
 
   def index(): Action[AnyContent] = Action.async { implicit request =>
-    dataRepository.index().map{
-      case Right(item: Seq[DataModel]) => Ok {Json.toJson(item)}
-      case Left(error) => Status(error)(Json.toJson("Unable to find any books"))
+    dataRepository.index().map {
+      case Right(items) => Ok(Json.toJson(items))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
   }
+
   def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel, _) =>
-        dataRepository.create(dataModel).map(_ => Created)
-      case JsError(_) => Future(BadRequest)
-    }
-  }
-
-  def read(id: String): Action[AnyContent] = Action.async { implicit request =>
-    dataRepository.read(id).map {
-      case Right(item: DataModel) => Ok(Json.toJson(item))
-      case Left(error) => Status(error)(Json.toJson(s"Unable to find item with id $id"))
-    }
-  }
-
-  def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    request.body.validate[DataModel] match {
-      case JsSuccess(dataModel, _) =>
-        dataRepository.update(id, dataModel).flatMap { updateResult =>
-          if (updateResult.getMatchedCount > 0) {
-            dataRepository.read(id).map {
-              case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
-              case Left(_) => NotFound(Json.toJson(s"Cannot find item with id($id)"))
-            }
-          } else {
-            Future.successful(NotFound(Json.toJson(s"Cannot find item with id($id)")))
-          }
+        dataRepository.create(dataModel).map { createdBook =>
+          Created(Json.toJson(createdBook))
         }
       case JsError(errors) =>
         Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> JsError.toJson(errors))))
     }
   }
 
+  def read(id: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.read(id).map {
+      case Right(item) => Ok(Json.toJson(item))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    request.body.validate[DataModel] match {
+      case JsSuccess(dataModel, _) =>
+        dataRepository.update(id, dataModel).flatMap {
+          case Right(updatedItem) => Future.successful(Accepted(Json.toJson(updatedItem)))
+          case Left(error) => Future.successful(NotFound(Json.toJson(error.reason)))
+        }
+      case JsError(errors) =>
+        Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> JsError.toJson(errors))))
+    }
+  }
 
   def delete(id: String): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.delete(id).map {
-      case Right(_) => Accepted
-      case Left(error) => Status(error)(Json.toJson(s"Unable to delete item with id $id"))
+      case Right(deletedItem) => Accepted(Json.toJson(deletedItem))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
   }
 
@@ -66,7 +64,4 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
       Ok(Json.toJson(book))
     }
   }
-
-
-
 }
