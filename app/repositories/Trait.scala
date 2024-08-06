@@ -9,7 +9,7 @@ import scala.concurrent.Future
 trait DataRepositoryTrait {
   def index(): Future[Either[APIError.BadAPIResponse, Seq[DataModel]]]
   def create(book: DataModel): Future[DataModel]
-  def read(id: String): Future[Either[APIError.BadAPIResponse, DataModgtel]]
+  def read(id: String): Future[Either[APIError.BadAPIResponse, DataModel]]
   def update(id: String, book: DataModel): Future[Either[APIError.BadAPIResponse, DataModel]]
   def delete(id: String): Future[Either[APIError.BadAPIResponse, DataModel]]
   def findByField(fieldName: String, value: String): Future[Either[APIError.BadAPIResponse, DataModel]]
