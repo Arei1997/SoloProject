@@ -62,3 +62,8 @@ class LibraryServiceSpec extends BaseSpec with MockFactory with ScalaFutures wit
     }
   }
 }
+
+
+//Changed Future(gameOfThrones.as[Book]) to EitherT.rightT[Future, APIError](gameOfThronesVolumeInfo)
+//Changed Future.failed(new RuntimeException(errorMessage)) to EitherT.leftT[Future, VolumeInfo](error)
+//Used .value to get the Future[Either[APIError, Book]] and match against Right and Left.

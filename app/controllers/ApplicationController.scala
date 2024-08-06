@@ -19,6 +19,8 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     dataRepository.index().map {
       case Right(items) => Ok(Json.toJson(items))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
     }
   }
 
@@ -27,6 +29,8 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
       case JsSuccess(dataModel, _) =>
         dataRepository.create(dataModel).map { createdBook =>
           Created(Json.toJson(createdBook))
+        }.recover {
+          case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
         }
       case JsError(errors) =>
         Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> JsError.toJson(errors))))
@@ -37,15 +41,19 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     dataRepository.read(id).map {
       case Right(item) => Ok(Json.toJson(item))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
     }
   }
 
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel, _) =>
-        dataRepository.update(id, dataModel).flatMap {
-          case Right(updatedItem) => Future.successful(Accepted(Json.toJson(updatedItem)))
-          case Left(error) => Future.successful(NotFound(Json.toJson(error.reason)))
+        dataRepository.update(id, dataModel).map {
+          case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
+          case Left(error) => NotFound(Json.toJson(error.reason))
+        }.recover {
+          case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
         }
       case JsError(errors) =>
         Future.successful(BadRequest(Json.obj("status" -> "error", "message" -> JsError.toJson(errors))))
@@ -56,6 +64,8 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     dataRepository.delete(id).map {
       case Right(deletedItem) => Accepted(Json.toJson(deletedItem))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
     }
   }
 
@@ -63,8 +73,26 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     service.getGoogleBook(search = search, term = term).value.map {
       case Right(book) => Ok(Json.toJson(book))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
     }
   }
 
+  def findByName(name: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.findByName(name).map {
+      case Right(item) => Ok(Json.toJson(item))
+      case Left(error) => NotFound(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
+    }
+  }
 
+  def updateField(id: String, field: String, value: JsValue): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.updateField(id, field, value).map {
+      case Right(updatedItem) => Accepted(Json.toJson(updatedItem))
+      case Left(error) => NotFound(Json.toJson(error.reason))
+    }.recover {
+      case ex => InternalServerError(Json.obj("status" -> "error", "message" -> ex.getMessage))
+    }
+  }
 }
